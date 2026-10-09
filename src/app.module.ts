@@ -25,7 +25,7 @@ import { GeneralModule } from './modules/general.module';
     }),
     ConfigModule.forRoot({ isGlobal: true }), // loads .env into process.env synchronously
     MikroOrmModule.forRoot(config),
-    CardsModule,
+    GeneralModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],
