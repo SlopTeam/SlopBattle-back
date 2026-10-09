@@ -182,7 +182,6 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "string"
-<<<<<<< HEAD
         },
         "updated_at": {
           "name": "updated_at",
@@ -200,8 +199,6 @@
           "collation": null,
           "enumItems": [],
           "mappedType": "datetime"
-=======
->>>>>>> d362b6abef09291c9585fd682a1260e4393ee9a5
         }
       },
       "indexes": [
