@@ -8,12 +8,15 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { ConfigModule } from '@nestjs/config';
 import { Battle } from './battle.entity';
+import { AuthModule } from './modules/auth/auth.module';
+import type { ExpressContextFunctionArgument } from '@as-integrations/express5';
 
 @Module({
   imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: true, // in-memory code-first schema
+      context: ({ req, res }: ExpressContextFunctionArgument) => ({ req, res }),
     }),
     ConfigModule.forRoot({ isGlobal: true }), // loads .env into process.env synchronously
     MikroOrmModule.forRoot({
@@ -26,6 +29,7 @@ import { Battle } from './battle.entity';
       autoLoadEntities: true,
     }),
     MikroOrmModule.forFeature([Battle]), // autoLoadEntities picks entities up from forFeature
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],
