@@ -13,6 +13,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "migration:generate": "ts-node src/migration-generate.ts",
+    "migration:up": "mikro-orm migration:up",
     "lint": "oxlint src/ test/",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -23,8 +25,10 @@
   "dependencies": {
     "@apollo/server": "^5.5.1",
     "@as-integrations/express5": "^1.1.2",
+    "@mikro-orm/cli": "^7.2.4",
     "@mikro-orm/core": "^7.2.4",
     "@mikro-orm/decorators": "^7.2.4",
+    "@mikro-orm/migrations": "^7.2.4",
     "@mikro-orm/nestjs": "^7.1.0",
     "@mikro-orm/postgresql": "^7.2.4",
     "@nestjs/apollo": "^14.0.3",
@@ -55,6 +59,12 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.2"
+  },
+  "mikro-orm": {
+    "configPaths": [
+      "./src/mikro.config.ts"
+    ]
   }
 }
