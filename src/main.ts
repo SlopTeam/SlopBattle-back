@@ -7,10 +7,7 @@ async function bootstrap() {
 
   // Apollo Sandbox runs on its own origin, so it needs CORS; CORS_ORIGINS (comma-separated) adds frontends.
   app.enableCors({
-    origin: [
-      'https://studio.apollographql.com',
-      ...(process.env.CORS_ORIGINS?.split(',') ?? []),
-    ],
+    origin: [...(process.env.CORS_ORIGINS?.split(',') ?? [])],
   });
 
   await app.get(MikroORM).migrator.up(); // Run migrations automatically on startup
