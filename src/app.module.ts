@@ -5,27 +5,27 @@ import { AppResolver } from './app.resolver';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { ConfigModule } from '@nestjs/config';
-import { Battle } from './battle.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CardsModule } from './modules/cards/cards.module';
+import config from './mikro.config';
+import { GeneralModule } from './modules/general.module';
 
 @Module({
   imports: [
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
+      imports: [ConfigModule, GeneralModule],
+      inject: [ConfigService],
       driver: ApolloDriver,
-      autoSchemaFile: true, // in-memory code-first schema
+      useFactory: async (configService: ConfigService) => ({
+        autoSchemaFile: true, // in-memory code-first schema
+        sortSchema: true,
+        playground: configService.get('NODE_ENV') === 'dev', // enable playground in non-production environments
+        include: [GeneralModule],
+      }),
     }),
     ConfigModule.forRoot({ isGlobal: true }), // loads .env into process.env synchronously
-    MikroOrmModule.forRoot({
-      driver: PostgreSqlDriver,
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      dbName: process.env.DB_NAME,
-      autoLoadEntities: true,
-    }),
-    MikroOrmModule.forFeature([Battle]), // autoLoadEntities picks entities up from forFeature
+    MikroOrmModule.forRoot(config),
+    CardsModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],
