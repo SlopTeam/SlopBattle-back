@@ -19,7 +19,7 @@ import { GeneralModule } from './modules/general.module';
       useFactory: async (configService: ConfigService) => ({
         autoSchemaFile: true, // in-memory code-first schema
         sortSchema: true,
-        playground: configService.get('NODE_ENV') === 'dev', // enable playground in non-production environments
+        playground: configService.get('NODE_ENV') === 'development', // enable playground in non-production environments
         include: [GeneralModule],
       }),
     }),
