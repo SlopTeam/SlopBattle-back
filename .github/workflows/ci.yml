@@ -58,14 +58,43 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     runs-on: [self-hosted, staging]
     concurrency: staging
-    permissions:
-      packages: read
     steps:
-      - name: Login ghcr.io
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-      - name: Deploy
-        working-directory: /var/home/core/apps/slopbattle
+      - name: Redeploy stack Portainer (staging)
+        env:
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          STACK_ID: ${{ vars.STAGING_STACK_ID }}
         run: |
-          docker compose pull api
-          docker compose up -d
-          docker image prune -f
+          # Relit la stack telle qu'elle est dans Portainer (compose + variables), puis la redéploie en re-téléchargeant l'image
+          api() { curl -fsSk -H "X-API-Key: $PORTAINER_API_KEY" "$@"; }
+          STACK=$(api "$PORTAINER_URL/api/stacks/$STACK_ID")
+          ENDPOINT=$(echo "$STACK" | jq -r .EndpointId)
+          FILE=$(api "$PORTAINER_URL/api/stacks/$STACK_ID/file" | jq -r .StackFileContent)
+          jq -n --arg f "$FILE" --argjson env "$(echo "$STACK" | jq '.Env // []')" \
+            '{stackFileContent: $f, env: $env, prune: true, pullImage: true}' \
+            | api -X PUT -H "Content-Type: application/json" -d @- \
+              "$PORTAINER_URL/api/stacks/$STACK_ID?endpointId=$ENDPOINT" > /dev/null
+          echo "Stack $STACK_ID redéployée"
+
+  deploy-prod:
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, staging]
+    concurrency: prod
+    steps:
+      - name: Redeploy stack Portainer (prod)
+        env:
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          STACK_ID: ${{ vars.PROD_STACK_ID }}
+        run: |
+          # Relit la stack telle qu'elle est dans Portainer (compose + variables), puis la redéploie en re-téléchargeant l'image
+          api() { curl -fsSk -H "X-API-Key: $PORTAINER_API_KEY" "$@"; }
+          STACK=$(api "$PORTAINER_URL/api/stacks/$STACK_ID")
+          ENDPOINT=$(echo "$STACK" | jq -r .EndpointId)
+          FILE=$(api "$PORTAINER_URL/api/stacks/$STACK_ID/file" | jq -r .StackFileContent)
+          jq -n --arg f "$FILE" --argjson env "$(echo "$STACK" | jq '.Env // []')" \
+            '{stackFileContent: $f, env: $env, prune: true, pullImage: true}' \
+            | api -X PUT -H "Content-Type: application/json" -d @- \
+              "$PORTAINER_URL/api/stacks/$STACK_ID?endpointId=$ENDPOINT" > /dev/null
+          echo "Stack $STACK_ID redéployée"
