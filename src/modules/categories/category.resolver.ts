@@ -5,16 +5,20 @@ import {
   UpdateCategoryInput,
 } from './dto/category.inputs';
 import { CategoriesService } from './categories.service';
+import { UseGuards } from '@nestjs/common';
+import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 
 @Resolver(() => Category)
 export class CategoryResolver {
   constructor(private readonly service: CategoriesService) {}
 
+  @UseGuards(GqlJwtAuthGuard)
   @Query(() => [Category])
   categories() {
     return this.service.findAll();
   }
 
+  @UseGuards(GqlJwtAuthGuard)
   @Query(() => Category)
   category(@Args('id', { type: () => ID }) id: number) {
     return this.service.findOne(id);
