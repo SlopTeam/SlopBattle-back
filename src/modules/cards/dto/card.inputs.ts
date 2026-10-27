@@ -13,6 +13,12 @@ export class CreateCardInput {
 
   @Field(() => Int)
   rarityId!: number;
+
+  @Field(() => [Int], { nullable: true })
+  categoryIds?: number[];
+
+  @Field(() => [Int], { nullable: true })
+  typeIds?: number[];
 }
 
 @InputType()

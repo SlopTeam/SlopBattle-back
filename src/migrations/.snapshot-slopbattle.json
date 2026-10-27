@@ -219,6 +219,306 @@
       "comment": null
     },
     {
+      "name": "card_categories",
+      "schema": "public",
+      "columns": {
+        "card_id": {
+          "name": "card_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "card_id",
+            "category_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "card_categories_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {
+        "card_categories_card_id_foreign": {
+          "columnNames": [
+            "card_id"
+          ],
+          "constraintName": "card_categories_card_id_foreign",
+          "localTableName": "public.card_categories",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.card",
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        },
+        "card_categories_category_id_foreign": {
+          "columnNames": [
+            "category_id"
+          ],
+          "constraintName": "card_categories_category_id_foreign",
+          "localTableName": "public.card_categories",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.categorie",
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
+      "name": "categorie",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "categorie_name_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "categorie_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
+      "name": "type",
+      "schema": "public",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "string"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "type_name_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "keyName": "type_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {},
+      "comment": null
+    },
+    {
+      "name": "type_categories",
+      "schema": "public",
+      "columns": {
+        "card_id": {
+          "name": "card_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "type_id": {
+          "name": "type_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "collation": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        }
+      },
+      "indexes": [
+        {
+          "columnNames": [
+            "card_id",
+            "type_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "keyName": "type_categories_pkey",
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "triggers": [],
+      "foreignKeys": {
+        "type_categories_card_id_foreign": {
+          "columnNames": [
+            "card_id"
+          ],
+          "constraintName": "type_categories_card_id_foreign",
+          "localTableName": "public.type_categories",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.card",
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        },
+        "type_categories_type_id_foreign": {
+          "columnNames": [
+            "type_id"
+          ],
+          "constraintName": "type_categories_type_id_foreign",
+          "localTableName": "public.type_categories",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.type",
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        }
+      },
+      "comment": null
+    },
+    {
       "name": "user",
       "schema": "public",
       "columns": {
