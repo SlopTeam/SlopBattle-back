@@ -19,7 +19,6 @@ interface GoogleProfile {
 
 interface JwtPayload {
   sub: number;
-  email: string;
 }
 
 function deriveKey(password: string, salt: Buffer): Promise<Buffer> {
@@ -86,7 +85,7 @@ export class AuthService {
   }
 
   async login(user: User): Promise<{ access_token: string }> {
-    const payload: JwtPayload = { sub: user.id, email: user.email };
+    const payload: JwtPayload = { sub: user.id };
     return { access_token: await this.jwt.signAsync(payload) };
   }
 

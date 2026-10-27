@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppResolver } from './app.resolver';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CardsModule } from './modules/cards/cards.module';
 import config from './mikro.config';
 import { GeneralModule } from './modules/general.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -23,15 +21,17 @@ import type { ExpressContextFunctionArgument } from '@as-integrations/express5';
         sortSchema: true,
         playground: configService.get('NODE_ENV') === 'dev', // enable playground in non-production environments
         include: [GeneralModule],
+        context: ({ req, res }: ExpressContextFunctionArgument) => ({
+          req,
+          res,
+        }),
       }),
-      context: ({ req, res }: ExpressContextFunctionArgument) => ({ req, res }),
     }),
     ConfigModule.forRoot({ isGlobal: true }), // loads .env into process.env synchronously
     MikroOrmModule.forRoot(config),
     GeneralModule,
     AuthModule,
   ],
-  controllers: [AppController],
   providers: [AppService, AppResolver],
 })
 export class AppModule {}
