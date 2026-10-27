@@ -19,7 +19,11 @@ import type { ExpressContextFunctionArgument } from '@as-integrations/express5';
       useFactory: async (configService: ConfigService) => ({
         autoSchemaFile: true, // in-memory code-first schema
         sortSchema: true,
-        playground: configService.get('NODE_ENV') === 'dev', // enable playground in non-production environments
+        playground: configService.get('NODE_ENV') === 'development', // enable playground in non-production environments
+        // Apollo disables introspection when NODE_ENV=production; GRAPHQL_INTROSPECTION=true re-enables it (staging + Apollo Sandbox)
+        introspection:
+          configService.get('NODE_ENV') !== 'production' ||
+          configService.get('GRAPHQL_INTROSPECTION') === 'true',
         include: [GeneralModule],
         context: ({ req, res }: ExpressContextFunctionArgument) => ({
           req,
