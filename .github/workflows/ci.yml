@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  image:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # develop -> image "staging" (déployée), main -> image "prod" (publiée, déploiement prod plus tard)
+      PUBLISH: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') }}
+      CHANNEL: ${{ github.ref == 'refs/heads/main' && 'prod' || 'staging' }}
+    steps:
+      - uses: actions/checkout@v4
+      # ghcr.io exige un nom d'image en minuscules
+      - run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v3
+      - if: env.PUBLISH == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Sur une PR ou une autre branche : build seul. Sur develop ou main : build + push.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: |
+            ${{ env.IMAGE }}:${{ env.CHANNEL }}
+            ${{ env.IMAGE }}:sha-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-staging:
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    runs-on: [self-hosted, staging]
+    concurrency: staging
+    steps:
+      - name: Redeploy stack Portainer (staging)
+        env:
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          STACK_ID: ${{ vars.STAGING_STACK_ID }}
+        run: |
+          # Relit la stack telle qu'elle est dans Portainer (compose + variables), puis la redéploie en re-téléchargeant l'image
+          api() { curl -fsSk -H "X-API-Key: $PORTAINER_API_KEY" "$@"; }
+          STACK=$(api "$PORTAINER_URL/api/stacks/$STACK_ID")
+          ENDPOINT=$(echo "$STACK" | jq -r .EndpointId)
+          FILE=$(api "$PORTAINER_URL/api/stacks/$STACK_ID/file" | jq -r .StackFileContent)
+          jq -n --arg f "$FILE" --argjson env "$(echo "$STACK" | jq '.Env // []')" \
+            '{stackFileContent: $f, env: $env, prune: true, pullImage: true}' \
+            | api -X PUT -H "Content-Type: application/json" -d @- \
+              "$PORTAINER_URL/api/stacks/$STACK_ID?endpointId=$ENDPOINT" > /dev/null
+          echo "Stack $STACK_ID redéployée"
+
+  deploy-prod:
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, staging]
+    concurrency: prod
+    steps:
+      - name: Redeploy stack Portainer (prod)
+        env:
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          PORTAINER_API_KEY: ${{ secrets.PORTAINER_API_KEY }}
+          STACK_ID: ${{ vars.PROD_STACK_ID }}
+        run: |
+          # Relit la stack telle qu'elle est dans Portainer (compose + variables), puis la redéploie en re-téléchargeant l'image
+          api() { curl -fsSk -H "X-API-Key: $PORTAINER_API_KEY" "$@"; }
+          STACK=$(api "$PORTAINER_URL/api/stacks/$STACK_ID")
+          ENDPOINT=$(echo "$STACK" | jq -r .EndpointId)
+          FILE=$(api "$PORTAINER_URL/api/stacks/$STACK_ID/file" | jq -r .StackFileContent)
+          jq -n --arg f "$FILE" --argjson env "$(echo "$STACK" | jq '.Env // []')" \
+            '{stackFileContent: $f, env: $env, prune: true, pullImage: true}' \
+            | api -X PUT -H "Content-Type: application/json" -d @- \
+              "$PORTAINER_URL/api/stacks/$STACK_ID?endpointId=$ENDPOINT" > /dev/null
+          echo "Stack $STACK_ID redéployée"
