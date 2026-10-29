@@ -2,8 +2,8 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import { Entity, ManyToMany, Property } from '@mikro-orm/decorators/legacy';
 import { Collection } from '@mikro-orm/core';
 import { BaseEntity } from '../base.entity';
-import { Category } from '../categories/category.entity';
-import { CardType } from '../types/type.entity';
+import { CategoryEntity } from '../categories/category.entity';
+import { CardTypeEntity } from '../types/type.entity';
 
 @ObjectType()
 @Entity()
@@ -25,21 +25,21 @@ export class Card extends BaseEntity {
   @Property({ type: 'number' })
   rarityId!: number;
 
-  @Field(() => [Category])
+  @Field(() => [CategoryEntity])
   @ManyToMany({
-    entity: () => Category,
+    entity: () => CategoryEntity,
     pivotTable: 'card_categories',
     joinColumn: 'card_id',
     inverseJoinColumn: 'category_id',
   })
-  categories = new Collection<Category>(this);
+  categories = new Collection<CategoryEntity>(this);
 
-  @Field(() => [CardType])
+  @Field(() => [CardTypeEntity])
   @ManyToMany({
-    entity: () => CardType,
+    entity: () => CardTypeEntity,
     pivotTable: 'type_categories',
     joinColumn: 'card_id',
     inverseJoinColumn: 'type_id',
   })
-  types = new Collection<CardType>(this);
+  types = new Collection<CardTypeEntity>(this);
 }

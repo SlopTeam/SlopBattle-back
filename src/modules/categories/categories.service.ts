@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Category } from './category.entity';
+import { CategoryEntity } from './category.entity';
 import {
   CreateCategoryInput,
   UpdateCategoryInput,
@@ -11,15 +11,15 @@ export class CategoriesService {
   constructor(private readonly em: EntityManager) {}
 
   findAll() {
-    return this.em.find(Category, {});
+    return this.em.find(CategoryEntity, {});
   }
 
   findOne(id: number) {
-    return this.em.findOneOrFail(Category, id);
+    return this.em.findOneOrFail(CategoryEntity, id);
   }
 
   async create(input: CreateCategoryInput) {
-    const category = this.em.create(Category, input);
+    const category = this.em.create(CategoryEntity, input);
     await this.em.flush();
     return category;
   }
@@ -32,7 +32,7 @@ export class CategoriesService {
   }
 
   async remove(id: number) {
-    await this.em.nativeDelete(Category, id);
+    await this.em.nativeDelete(CategoryEntity, id);
     return true;
   }
 }
