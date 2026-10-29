@@ -33,4 +33,22 @@ export class CreateCardInput {
 }
 
 @InputType()
+export class CardsFilterInput {
+  @Field(() => Int, { nullable: true })
+  @IsOptional()
+  @IsInt()
+  rarityId?: number;
+
+  @Field(() => [Int], { nullable: true })
+  @IsOptional()
+  @IsInt({ each: true })
+  categoryIds?: number[];
+
+  @Field(() => [Int], { nullable: true })
+  @IsOptional()
+  @IsInt({ each: true })
+  typeIds?: number[];
+}
+
+@InputType()
 export class UpdateCardInput extends PartialType(CreateCardInput) {}

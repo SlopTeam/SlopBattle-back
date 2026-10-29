@@ -17,9 +17,17 @@ describe('CardResolver', () => {
     resolver = new CardResolver(service as unknown as CardsService);
   });
 
-  it('cards delegates to findAll', async () => {
+  it('cards delegates to findAll without filter', async () => {
     service.findAll.mockResolvedValue([]);
     await expect(resolver.cards()).resolves.toEqual([]);
+    expect(service.findAll).toHaveBeenCalledWith(undefined);
+  });
+
+  it('cards forwards the filter to findAll', async () => {
+    const filter = { rarityId: 1, categoryIds: [2], typeIds: [3] };
+    service.findAll.mockResolvedValue([]);
+    await expect(resolver.cards(filter)).resolves.toEqual([]);
+    expect(service.findAll).toHaveBeenCalledWith(filter);
   });
 
   it('card delegates to findOne', async () => {
