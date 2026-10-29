@@ -1,5 +1,5 @@
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { Category } from './category.entity';
+import { CategoryEntity } from './category.entity';
 import {
   CreateCategoryInput,
   UpdateCategoryInput,
@@ -8,28 +8,28 @@ import { CategoriesService } from './categories.service';
 import { UseGuards } from '@nestjs/common';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 
-@Resolver(() => Category)
+@Resolver(() => CategoryEntity)
 export class CategoryResolver {
   constructor(private readonly service: CategoriesService) {}
 
   @UseGuards(GqlJwtAuthGuard)
-  @Query(() => [Category])
+  @Query(() => [CategoryEntity])
   categories() {
     return this.service.findAll();
   }
 
   @UseGuards(GqlJwtAuthGuard)
-  @Query(() => Category)
+  @Query(() => CategoryEntity)
   category(@Args('id', { type: () => ID }) id: number) {
     return this.service.findOne(id);
   }
 
-  @Mutation(() => Category)
+  @Mutation(() => CategoryEntity)
   createCategory(@Args('input') input: CreateCategoryInput) {
     return this.service.create(input);
   }
 
-  @Mutation(() => Category)
+  @Mutation(() => CategoryEntity)
   updateCategory(
     @Args('id', { type: () => ID }) id: number,
     @Args('input') input: UpdateCategoryInput,
