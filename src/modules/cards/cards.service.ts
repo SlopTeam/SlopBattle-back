@@ -17,7 +17,7 @@ export class CardsService {
   // values inside one filter are OR-ed, different filters are AND-ed
   findAll(filter?: CardsFilterInput) {
     const where: FilterQuery<Card> = {};
-    if (filter?.rarityId!!) {
+    if (filter?.rarityId != null) {
       where.rarityId = filter.rarityId;
     }
     if (filter?.categoryIds?.length) {
