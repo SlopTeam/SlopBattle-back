@@ -18,7 +18,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      # - run: npm test COMMENTED BECAUSE NO TESTS YET
+      - run: npm test
       - run: npm run build
 
   image:
