@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
+import type { FilterQuery } from '@mikro-orm/core';
 import { Card } from './card.entity';
-import { CreateCardInput, UpdateCardInput } from './dto/card.inputs';
+import {
+  CardsFilterInput,
+  CreateCardInput,
+  UpdateCardInput,
+} from './dto/card.inputs';
 
 const populate = ['categories', 'types'] as const;
 
@@ -9,8 +14,19 @@ const populate = ['categories', 'types'] as const;
 export class CardsService {
   constructor(private readonly em: EntityManager) {}
 
-  findAll() {
-    return this.em.find(Card, {}, { populate });
+  // values inside one filter are OR-ed, different filters are AND-ed
+  findAll(filter?: CardsFilterInput) {
+    const where: FilterQuery<Card> = {};
+    if (filter?.rarityId!!) {
+      where.rarityId = filter.rarityId;
+    }
+    if (filter?.categoryIds?.length) {
+      where.categories = { id: { $in: filter.categoryIds } };
+    }
+    if (filter?.typeIds?.length) {
+      where.types = { id: { $in: filter.typeIds } };
+    }
+    return this.em.find(Card, where, { populate });
   }
 
   findOne(id: number) {

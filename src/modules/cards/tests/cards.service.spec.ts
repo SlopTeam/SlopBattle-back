@@ -26,6 +26,26 @@ describe('CardsService', () => {
     expect(em.find).toHaveBeenCalledWith(Card, {}, { populate });
   });
 
+  it('findAll ignores empty filters', async () => {
+    em.find.mockResolvedValue([]);
+    await service.findAll({ categoryIds: [], typeIds: [] });
+    expect(em.find).toHaveBeenCalledWith(Card, {}, { populate });
+  });
+
+  it('findAll filters by rarity, category and type', async () => {
+    em.find.mockResolvedValue([]);
+    await service.findAll({ rarityId: 1, categoryIds: [2, 3], typeIds: [4] });
+    expect(em.find).toHaveBeenCalledWith(
+      Card,
+      {
+        rarityId: 1,
+        categories: { id: { $in: [2, 3] } },
+        types: { id: { $in: [4] } },
+      },
+      { populate },
+    );
+  });
+
   it('findOne populates categories and types', async () => {
     em.findOneOrFail.mockResolvedValue({ id: 1 });
     await expect(service.findOne(1)).resolves.toEqual({ id: 1 });

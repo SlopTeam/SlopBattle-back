@@ -1,6 +1,10 @@
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Card } from './card.entity';
-import { CreateCardInput, UpdateCardInput } from './dto/card.inputs';
+import {
+  CardsFilterInput,
+  CreateCardInput,
+  UpdateCardInput,
+} from './dto/card.inputs';
 import { CardsService } from './cards.service';
 import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
@@ -11,8 +15,11 @@ export class CardResolver {
 
   @UseGuards(GqlJwtAuthGuard)
   @Query(() => [Card])
-  cards() {
-    return this.cardsService.findAll();
+  cards(
+    @Args('filter', { type: () => CardsFilterInput, nullable: true })
+    filter?: CardsFilterInput,
+  ) {
+    return this.cardsService.findAll(filter);
   }
 
   @UseGuards(GqlJwtAuthGuard)
