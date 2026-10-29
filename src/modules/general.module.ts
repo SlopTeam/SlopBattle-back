@@ -4,6 +4,7 @@ import { CardsModule } from './cards/cards.module';
 import { CategoriesModule } from './categories/categories.module';
 import { TypesModule } from './types/types.module';
 import { UserModule } from './user/user.module';
+import { UserCardsModule } from './user-cards/user-cards.module';
 
 @Module({
   imports: [
@@ -12,6 +13,8 @@ import { UserModule } from './user/user.module';
     TypesModule,
     CardsModule,
     UserModule,
+    UserCardsModule,
+
   ],
 })
 export class GeneralModule {}
