@@ -6,10 +6,7 @@ import { UpdateUserProfileInput } from '../inputs/update-user-profile.input';
 import { PublicUserModel, UserProfileModel } from '../models/user.model';
 import { toProfile, toPublic } from '../user.mapper';
 import { UserService } from '../user.service';
-
-interface AuthenticatedUser {
-  id: number;
-}
+import type { AuthenticatedUser } from '../interface/authenticated-user.interface';
 
 @Resolver(() => UserProfileModel)
 export class UserResolver {
