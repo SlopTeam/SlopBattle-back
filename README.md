@@ -44,6 +44,13 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Create a back-office admin
+
+```bash
+$ npm run build
+$ npm run admin:create -- admin@example.com 'a-strong-password'
+```
+
 ## Run tests
 
 ```bash
