@@ -5,30 +5,31 @@ import {
   UpdateCategoryInput,
 } from './dto/category.inputs';
 import { CategoriesService } from './categories.service';
-import { UseGuards } from '@nestjs/common';
-import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
+import { Admin, PlayerOrAdmin } from '../auth/decorators/admin.decorator';
 
 @Resolver(() => CategoryEntity)
 export class CategoryResolver {
   constructor(private readonly service: CategoriesService) {}
 
-  @UseGuards(GqlJwtAuthGuard)
+  @PlayerOrAdmin()
   @Query(() => [CategoryEntity])
   categories() {
     return this.service.findAll();
   }
 
-  @UseGuards(GqlJwtAuthGuard)
+  @PlayerOrAdmin()
   @Query(() => CategoryEntity)
   category(@Args('id', { type: () => ID }) id: number) {
     return this.service.findOne(id);
   }
 
+  @Admin()
   @Mutation(() => CategoryEntity)
   createCategory(@Args('input') input: CreateCategoryInput) {
     return this.service.create(input);
   }
 
+  @Admin()
   @Mutation(() => CategoryEntity)
   updateCategory(
     @Args('id', { type: () => ID }) id: number,
@@ -37,6 +38,7 @@ export class CategoryResolver {
     return this.service.update(id, input);
   }
 
+  @Admin()
   @Mutation(() => Boolean)
   removeCategory(@Args('id', { type: () => ID }) id: number) {
     return this.service.remove(id);

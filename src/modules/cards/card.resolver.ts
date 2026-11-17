@@ -6,14 +6,13 @@ import {
   UpdateCardInput,
 } from './dto/card.inputs';
 import { CardsService } from './cards.service';
-import { GqlJwtAuthGuard } from '../auth/guards/gql-jwt-auth.guard';
-import { UseGuards } from '@nestjs/common';
+import { Admin, PlayerOrAdmin } from '../auth/decorators/admin.decorator';
 
 @Resolver(() => Card)
 export class CardResolver {
   constructor(private readonly cardsService: CardsService) {}
 
-  @UseGuards(GqlJwtAuthGuard)
+  @PlayerOrAdmin()
   @Query(() => [Card])
   cards(
     @Args('filter', { type: () => CardsFilterInput, nullable: true })
@@ -22,17 +21,19 @@ export class CardResolver {
     return this.cardsService.findAll(filter);
   }
 
-  @UseGuards(GqlJwtAuthGuard)
+  @PlayerOrAdmin()
   @Query(() => Card)
   card(@Args('id', { type: () => ID }) id: number) {
     return this.cardsService.findOne(id);
   }
-  
+
+  @Admin()
   @Mutation(() => Card)
   createCard(@Args('input') input: CreateCardInput) {
     return this.cardsService.create(input);
   }
 
+  @Admin()
   @Mutation(() => Card)
   updateCard(
     @Args('id', { type: () => ID }) id: number,
@@ -41,6 +42,7 @@ export class CardResolver {
     return this.cardsService.update(id, input);
   }
 
+  @Admin()
   @Mutation(() => Boolean)
   removeCard(@Args('id', { type: () => ID }) id: number) {
     return this.cardsService.remove(id);

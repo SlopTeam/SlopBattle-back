@@ -4,13 +4,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import {
-  randomBytes,
-  scrypt as scryptCallback,
-  timingSafeEqual,
-} from 'node:crypto';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
+import { hashPassword, verifyPassword } from './password';
 
 interface GoogleProfile {
   id: string;
@@ -19,18 +15,6 @@ interface GoogleProfile {
 
 interface JwtPayload {
   sub: number;
-}
-
-function deriveKey(password: string, salt: Buffer): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    scryptCallback(password, salt, 64, (error, key) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(key);
-      }
-    });
-  });
 }
 
 @Injectable()
@@ -46,13 +30,16 @@ export class AuthService {
       throw new ConflictException('Cette adresse e-mail est déjà utilisée');
     }
 
-    const passwordHash = await this.hashPassword(password);
+    const passwordHash = await hashPassword(password);
     return this.users.create({ email: normalizedEmail, passwordHash });
   }
 
   async validateLocal(email: string, password: string): Promise<User> {
     const user = await this.users.findByEmail(email.trim().toLowerCase());
-    if (!user?.passwordHash || !(await this.verifyPassword(password, user.passwordHash))) {
+    if (
+      !user?.passwordHash ||
+      !(await verifyPassword(password, user.passwordHash))
+    ) {
       throw new UnauthorizedException('Identifiants invalides');
     }
     return user;
@@ -87,34 +74,5 @@ export class AuthService {
   async login(user: User): Promise<{ access_token: string }> {
     const payload: JwtPayload = { sub: user.id };
     return { access_token: await this.jwt.signAsync(payload) };
-  }
-
-  private async hashPassword(password: string): Promise<string> {
-    const salt = randomBytes(16);
-    const hash = await deriveKey(password, salt);
-    return `scrypt$${salt.toString('hex')}$${hash.toString('hex')}`;
-  }
-
-  private async verifyPassword(
-    password: string,
-    storedHash: string,
-  ): Promise<boolean> {
-    const [algorithm, saltHex, hashHex] = storedHash.split('$');
-    if (
-      algorithm !== 'scrypt' ||
-      !saltHex ||
-      !hashHex ||
-      !/^[\da-f]+$/i.test(saltHex) ||
-      !/^[\da-f]+$/i.test(hashHex)
-    ) {
-      return false;
-    }
-
-    const salt = Buffer.from(saltHex, 'hex');
-    const expectedHash = Buffer.from(hashHex, 'hex');
-    if (salt.length !== 16 || expectedHash.length !== 64) return false;
-
-    const actualHash = await deriveKey(password, salt);
-    return timingSafeEqual(actualHash, expectedHash);
   }
 }

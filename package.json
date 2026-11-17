@@ -15,6 +15,7 @@
     "start:prod": "node dist/main",
     "migration:generate": "ts-node src/migration-generate.ts",
     "migration:up": "mikro-orm migration:up",
+    "admin:create": "node dist/scripts/create-admin.js",
     "lint": "oxlint src/ test/",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
