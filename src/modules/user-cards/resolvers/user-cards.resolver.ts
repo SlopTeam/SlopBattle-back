@@ -1,4 +1,4 @@
-import { Resolver, Query, Args, ID, Mutation } from "@nestjs/graphql";
+import { Resolver, Query, Args, Mutation } from "@nestjs/graphql";
 import { UpdateUserCardsInput } from "../inputs/update-user-cards.input";
 import { UserCardsEntity } from "../entities/user-cards.entity";
 import { UserCardsService } from "../user-cards.service";
@@ -7,6 +7,7 @@ import { GqlJwtAuthGuard } from "../../auth/guards/gql-jwt-auth.guard";
 import { CardCollection } from "../models/card-collection.model";
 import type { AuthenticatedUser } from "../../user/interface/authenticated-user.interface";
 import { CurrentUser } from "../../auth/decorators/current-user.decorator";
+import { CardsFilterInput } from "../../cards/dto/card.inputs";
 
 @Resolver(() => UserCardsEntity)
 export class UserCardsResolver {
@@ -16,8 +17,10 @@ export class UserCardsResolver {
     @Query(() => CardCollection)
     async myCardCollection(
         @CurrentUser() currentUser: AuthenticatedUser,
+        @Args('filter', { type: () => CardsFilterInput, nullable: true })
+        filter?: CardsFilterInput,
     ): Promise<CardCollection> {
-        return this.userCardsService.findCollectionByUserId(currentUser.id);
+        return this.userCardsService.findCollectionByUserId(currentUser.id, filter);
     }
 
     @UseGuards(GqlJwtAuthGuard)

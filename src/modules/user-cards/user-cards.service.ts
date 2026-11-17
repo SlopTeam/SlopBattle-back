@@ -1,8 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@mikro-orm/nestjs";
-import { EntityRepository, EntityManager } from "@mikro-orm/core";
+import { EntityRepository, EntityManager, FilterQuery } from "@mikro-orm/core";
 import { UserCardsEntity } from "./entities/user-cards.entity";
 import { CardCollection } from "./models/card-collection.model";
+import { CardsFilterInput } from "../cards/dto/card.inputs";
+import { Card } from "../cards/card.entity";
 
 @Injectable()
 export class UserCardsService {
@@ -11,8 +13,19 @@ export class UserCardsService {
         private readonly entityManager: EntityManager,
     ) {}
 
-    async findCollectionByUserId(userId: number): Promise<CardCollection> {
-        const userCards = await this.repo.find({ user: userId });
+    async findCollectionByUserId(userId: number, filter?: CardsFilterInput): Promise<CardCollection> {
+        const where: FilterQuery<Card> = {};
+        if (filter?.rarityId != null) {
+            where.rarityId = filter.rarityId;
+        }
+        if (filter?.categoryIds?.length) {
+            where.categories = { id: { $in: filter.categoryIds } };
+        }
+        if (filter?.typeIds?.length) {
+            where.types = { id: { $in: filter.typeIds } };
+        }
+        const hasFilter = Object.keys(where).length > 0;
+        const userCards = await this.repo.find({ user: userId, ...(hasFilter ? { card: where } : {}) });
         const collection = {
             userId: userId,
             cards: userCards.map(uc => ({
@@ -28,7 +41,7 @@ export class UserCardsService {
         const results: UserCardsEntity[] = [];
         for (const cardId of cardIds) {
             const alreadyExists = await this.repo.findOne({ user: userId, card: cardId });
-            if (alreadyExists!!) {
+            if (alreadyExists) {
                 const newQuantity = alreadyExists.quantity + 1;
                 this.repo.assign(alreadyExists, { quantity: newQuantity });
                 await this.entityManager.flush();

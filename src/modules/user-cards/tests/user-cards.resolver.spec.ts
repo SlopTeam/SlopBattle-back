@@ -21,7 +21,15 @@ describe('UserCardsResolver', () => {
     service.findCollectionByUserId.mockResolvedValue(collection);
 
     await expect(resolver.myCardCollection(user)).resolves.toBe(collection);
-    expect(service.findCollectionByUserId).toHaveBeenCalledWith(7);
+    expect(service.findCollectionByUserId).toHaveBeenCalledWith(7, undefined);
+  });
+
+  it('myCardCollection forwards the filter', async () => {
+    service.findCollectionByUserId.mockResolvedValue({ userId: 7, cards: [] });
+    const filter = { rarityId: 1 } as any;
+
+    await resolver.myCardCollection(user, filter);
+    expect(service.findCollectionByUserId).toHaveBeenCalledWith(7, filter);
   });
 
   it('addCardsInCollection forwards the card ids', async () => {

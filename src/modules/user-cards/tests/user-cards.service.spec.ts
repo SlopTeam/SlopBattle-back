@@ -33,6 +33,33 @@ describe('UserCardsService', () => {
       expect(repo.find).toHaveBeenCalledWith({ user: 1 });
     });
 
+    it('applies the cards filter on the card relation', async () => {
+      repo.find.mockResolvedValue([]);
+
+      await service.findCollectionByUserId(1, {
+        rarityId: 2,
+        categoryIds: [3, 4],
+        typeIds: [5],
+      } as any);
+
+      expect(repo.find).toHaveBeenCalledWith({
+        user: 1,
+        card: {
+          rarityId: 2,
+          categories: { id: { $in: [3, 4] } },
+          types: { id: { $in: [5] } },
+        },
+      });
+    });
+
+    it('ignores empty filter values', async () => {
+      repo.find.mockResolvedValue([]);
+
+      await service.findCollectionByUserId(1, { categoryIds: [], typeIds: [] } as any);
+
+      expect(repo.find).toHaveBeenCalledWith({ user: 1 });
+    });
+
     it('returns an empty list when the user owns nothing', async () => {
       repo.find.mockResolvedValue([]);
       await expect(service.findCollectionByUserId(1)).resolves.toEqual({
