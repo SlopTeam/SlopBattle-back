@@ -41,7 +41,7 @@ export class UserCardsService {
         const results: UserCardsEntity[] = [];
         for (const cardId of cardIds) {
             const alreadyExists = await this.repo.findOne({ user: userId, card: cardId });
-            if (alreadyExists!!) {
+            if (alreadyExists) {
                 const newQuantity = alreadyExists.quantity + 1;
                 this.repo.assign(alreadyExists, { quantity: newQuantity });
                 await this.entityManager.flush();
