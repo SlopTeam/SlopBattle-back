@@ -705,7 +705,19 @@
       ],
       "checks": [],
       "triggers": [],
-      "foreignKeys": {},
+      "foreignKeys": {
+        "card_rarity_id_foreign": {
+          "columnNames": [
+            "rarity_id"
+          ],
+          "constraintName": "card_rarity_id_foreign",
+          "localTableName": "public.card",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.rarity"
+        }
+      },
       "comment": null
     },
     {
@@ -1536,8 +1548,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.card",
-          "updateRule": "cascade"
+          "referencedTableName": "public.card"
         },
         "user_cards_user_id_foreign": {
           "columnNames": [
@@ -1548,8 +1559,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user",
-          "updateRule": "cascade"
+          "referencedTableName": "public.user"
         }
       },
       "comment": null

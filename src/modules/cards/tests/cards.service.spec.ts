@@ -4,7 +4,7 @@ import { Card } from '../card.entity';
 
 describe('CardsService', () => {
   let service: CardsService;
-  const populate = ['categories', 'types'];
+  const populate = ['categories', 'types', 'rarity'];
   const em = {
     find: jest.fn<(...args: any[]) => any>(),
     findOneOrFail: jest.fn<(...args: any[]) => any>(),
@@ -38,7 +38,7 @@ describe('CardsService', () => {
     expect(em.find).toHaveBeenCalledWith(
       Card,
       {
-        rarityId: 1,
+        rarity: 1,
         categories: { id: { $in: [2, 3] } },
         types: { id: { $in: [4] } },
       },
@@ -82,6 +82,17 @@ describe('CardsService', () => {
         types: [],
       });
     });
+
+    it('maps rarityId to the rarity relation', async () => {
+      em.create.mockReturnValue({});
+      await service.create({ name: 'a', rarityId: 5 } as any);
+      expect(em.create).toHaveBeenCalledWith(Card, {
+        name: 'a',
+        rarity: 5,
+        categories: [],
+        types: [],
+      });
+    });
   });
 
   describe('update', () => {
@@ -112,6 +123,15 @@ describe('CardsService', () => {
       await service.update(1, { name: 'b' } as any);
 
       expect(em.assign).toHaveBeenCalledWith(card, { name: 'b' });
+    });
+
+    it('maps rarityId to the rarity relation', async () => {
+      const card = { id: 1 };
+      em.findOneOrFail.mockResolvedValue(card);
+
+      await service.update(1, { rarityId: 5 } as any);
+
+      expect(em.assign).toHaveBeenCalledWith(card, { rarity: 5 });
     });
 
     it('propagates a missing card', async () => {

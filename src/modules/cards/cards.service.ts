@@ -8,7 +8,7 @@ import {
   UpdateCardInput,
 } from './dto/card.inputs';
 
-const populate = ['categories', 'types'] as const;
+const populate = ['categories', 'types', 'rarity'] as const;
 
 @Injectable()
 export class CardsService {
@@ -18,7 +18,7 @@ export class CardsService {
   findAll(filter?: CardsFilterInput) {
     const where: FilterQuery<Card> = {};
     if (filter?.rarityId != null) {
-      where.rarityId = filter.rarityId;
+      where.rarity = filter.rarityId;
     }
     if (filter?.categoryIds?.length) {
       where.categories = { id: { $in: filter.categoryIds } };
@@ -34,9 +34,10 @@ export class CardsService {
   }
 
   async create(input: CreateCardInput) {
-    const { categoryIds, typeIds, ...data } = input;
+    const { categoryIds, typeIds, rarityId, ...data } = input;
     const card = this.em.create(Card, {
       ...data,
+      rarity: rarityId,
       categories: categoryIds ?? [],
       types: typeIds ?? [],
     });
@@ -48,9 +49,10 @@ export class CardsService {
 
   async update(id: number, input: UpdateCardInput) {
     const card = await this.findOne(id);
-    const { categoryIds, typeIds, ...data } = input;
+    const { categoryIds, typeIds, rarityId, ...data } = input;
     this.em.assign(card, {
       ...data,
+      ...(rarityId != null && { rarity: rarityId }),
       ...(categoryIds && { categories: categoryIds }),
       ...(typeIds && { types: typeIds }),
     });

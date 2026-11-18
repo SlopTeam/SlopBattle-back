@@ -16,7 +16,7 @@ export class UserCardsService {
     async findCollectionByUserId(userId: number, filter?: CardsFilterInput): Promise<CardCollection> {
         const where: FilterQuery<Card> = {};
         if (filter?.rarityId != null) {
-            where.rarityId = filter.rarityId;
+            where.rarity = filter.rarityId;
         }
         if (filter?.categoryIds?.length) {
             where.categories = { id: { $in: filter.categoryIds } };
