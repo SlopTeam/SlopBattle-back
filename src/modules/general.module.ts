@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { BoosterModule } from './boosters/booster.module';
 import { CardsModule } from './cards/cards.module';
 import { CategoriesModule } from './categories/categories.module';
+import { RarityModule } from './rarity/rarity.module';
 import { TypesModule } from './types/types.module';
 import { UserModule } from './user/user.module';
 import { UserCardsModule } from './user-cards/user-cards.module';
@@ -16,6 +17,7 @@ import { UserCardsModule } from './user-cards/user-cards.module';
     UserModule,
     UserCardsModule,
     BoosterModule,
+    RarityModule,
 
   ],
 })

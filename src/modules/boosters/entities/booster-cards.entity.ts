@@ -19,6 +19,6 @@ export class BoosterCardsEntity extends BaseEntity {
     isBanner!: boolean;
 
     @Field(() => Int)
-    @Property({ type: 'number' })
-    dropRate!: number;
+    @Property({ type: 'number', nullable: true })
+    dropRate?: number;
 }
