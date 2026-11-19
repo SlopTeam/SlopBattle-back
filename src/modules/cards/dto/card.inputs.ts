@@ -1,5 +1,5 @@
 import { Field, InputType, Int, PartialType } from '@nestjs/graphql';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsInt, IsOptional, IsString, MaxLength } from 'class-validator';
 
 @InputType()
 export class CreateCardInput {
@@ -34,6 +34,15 @@ export class CreateCardInput {
 
 @InputType()
 export class CardsFilterInput {
+  @Field({
+    nullable: true,
+    description: 'Case-insensitive substring of the title',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  search?: string;
+
   @Field(() => Int, { nullable: true })
   @IsOptional()
   @IsInt()
