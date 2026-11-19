@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import type { FilterQuery, FindOptions } from '@mikro-orm/core';
 import { Card } from './card.entity';
@@ -9,7 +9,7 @@ import {
   UpdateCardInput,
 } from './dto/card.inputs';
 
-const populate = ['categories', 'types', 'rarity'] as const;
+const populate = ['categories', 'types', 'rarity', 'media'] as const;
 
 export const MAX_PAGE_SIZE = 100;
 
@@ -24,6 +24,13 @@ const orderBy: Record<CardSort, FindOptions<Card>['orderBy']> = {
   ],
   [CardSort.NEWEST]: [{ createdAt: 'desc' }, { id: 'asc' }],
 };
+
+// an uploaded media wins over a legacy link: setting one clears the other
+function toImage({ mediaId, imageUrl }: UpdateCardInput) {
+  if (mediaId != null) return { media: mediaId, imageUrl: null };
+  if (imageUrl) return { media: null, imageUrl };
+  return {};
+}
 
 // LIKE wildcards typed by the user are matched literally
 function escapeLike(text: string) {
@@ -89,9 +96,14 @@ export class CardsService {
   }
 
   async create(input: CreateCardInput) {
-    const { categoryIds, typeIds, rarityId, ...data } = input;
+    const { categoryIds, typeIds, rarityId, mediaId, imageUrl, ...data } =
+      input;
+    if (mediaId == null && !imageUrl) {
+      throw new BadRequestException('Une image est obligatoire.');
+    }
     const card = this.em.create(Card, {
       ...data,
+      ...toImage({ mediaId, imageUrl }),
       rarity: rarityId,
       categories: categoryIds ?? [],
       types: typeIds ?? [],
@@ -104,9 +116,11 @@ export class CardsService {
 
   async update(id: number, input: UpdateCardInput) {
     const card = await this.findOne(id);
-    const { categoryIds, typeIds, rarityId, ...data } = input;
+    const { categoryIds, typeIds, rarityId, mediaId, imageUrl, ...data } =
+      input;
     this.em.assign(card, {
       ...data,
+      ...toImage({ mediaId, imageUrl }),
       ...(rarityId != null && { rarity: rarityId }),
       ...(categoryIds && { categories: categoryIds }),
       ...(typeIds && { types: typeIds }),

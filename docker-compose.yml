@@ -22,9 +22,12 @@ services:
       DB_PORT: 5432
     ports:
       - '${PORT:-3000}:3000'
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
 
 volumes:
   pgdata:
+  uploads:

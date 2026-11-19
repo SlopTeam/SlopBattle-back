@@ -1,6 +1,7 @@
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { CardResolver } from '../../cards/card.resolver';
 import { CategoryResolver } from '../../categories/category.resolver';
+import { MediaResolver } from '../../media/media.resolver';
 import { CardTypeResolver } from '../../types/type.resolver';
 import { GqlAdminAuthGuard } from '../guards/gql-admin-auth.guard';
 import { GqlPlayerOrAdminAuthGuard } from '../guards/gql-player-or-admin-auth.guard';
@@ -18,6 +19,7 @@ describe('admin guards on resolvers', () => {
     [CardResolver, ['createCard', 'updateCard', 'removeCard']],
     [CategoryResolver, ['createCategory', 'updateCategory', 'removeCategory']],
     [CardTypeResolver, ['createCardType', 'updateCardType', 'removeCardType']],
+    [MediaResolver, ['uploadMedia']],
   ])('%p mutations are admin only', (resolver, methods) => {
     for (const method of methods) {
       expect(guardsOf(resolver, method)).toEqual([GqlAdminAuthGuard]);

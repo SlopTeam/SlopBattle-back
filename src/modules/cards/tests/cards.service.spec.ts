@@ -5,7 +5,7 @@ import { CardSort } from '../models/cards-page.model';
 
 describe('CardsService', () => {
   let service: CardsService;
-  const populate = ['categories', 'types', 'rarity'];
+  const populate = ['categories', 'types', 'rarity', 'media'];
   const em = {
     find: jest.fn<(...args: any[]) => any>(),
     findAndCount: jest.fn<(...args: any[]) => any>(),
@@ -134,12 +134,15 @@ describe('CardsService', () => {
 
       const result = await service.create({
         name: 'a',
+        imageUrl: 'https://img',
         categoryIds: [1],
         typeIds: [2],
       } as any);
 
       expect(em.create).toHaveBeenCalledWith(Card, {
         name: 'a',
+        imageUrl: 'https://img',
+        media: null,
         categories: [1],
         types: [2],
       });
@@ -152,9 +155,11 @@ describe('CardsService', () => {
 
     it('defaults relations to empty arrays', async () => {
       em.create.mockReturnValue({});
-      await service.create({ name: 'a' } as any);
+      await service.create({ name: 'a', mediaId: 7 } as any);
       expect(em.create).toHaveBeenCalledWith(Card, {
         name: 'a',
+        media: 7,
+        imageUrl: null,
         categories: [],
         types: [],
       });
@@ -162,13 +167,31 @@ describe('CardsService', () => {
 
     it('maps rarityId to the rarity relation', async () => {
       em.create.mockReturnValue({});
-      await service.create({ name: 'a', rarityId: 5 } as any);
+      await service.create({ name: 'a', mediaId: 7, rarityId: 5 } as any);
       expect(em.create).toHaveBeenCalledWith(Card, {
         name: 'a',
+        media: 7,
+        imageUrl: null,
         rarity: 5,
         categories: [],
         types: [],
       });
+    });
+
+    it('rejects a card without image', async () => {
+      await expect(service.create({ name: 'a' } as any)).rejects.toThrow(
+        'Une image est obligatoire.',
+      );
+      expect(em.create).not.toHaveBeenCalled();
+    });
+
+    it('prefers the media over a legacy link', async () => {
+      em.create.mockReturnValue({});
+      await service.create({ name: 'a', mediaId: 7, imageUrl: 'x' } as any);
+      expect(em.create).toHaveBeenCalledWith(
+        Card,
+        expect.objectContaining({ media: 7, imageUrl: null }),
+      );
     });
   });
 
@@ -211,6 +234,30 @@ describe('CardsService', () => {
       await service.update(1, { rarityId: 5 } as any);
 
       expect(em.assign).toHaveBeenCalledWith(card, { rarity: 5 });
+    });
+
+    it('switches to an uploaded media and drops the legacy link', async () => {
+      const card = { id: 1 };
+      em.findOneOrFail.mockResolvedValue(card);
+
+      await service.update(1, { mediaId: 7 } as any);
+
+      expect(em.assign).toHaveBeenCalledWith(card, {
+        media: 7,
+        imageUrl: null,
+      });
+    });
+
+    it('switches back to a legacy link and drops the media', async () => {
+      const card = { id: 1 };
+      em.findOneOrFail.mockResolvedValue(card);
+
+      await service.update(1, { imageUrl: 'https://img' } as any);
+
+      expect(em.assign).toHaveBeenCalledWith(card, {
+        media: null,
+        imageUrl: 'https://img',
+      });
     });
 
     it('propagates a missing card', async () => {

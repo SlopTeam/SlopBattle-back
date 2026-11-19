@@ -10,6 +10,7 @@ import { BaseEntity } from '../base.entity';
 import { CategoryEntity } from '../categories/category.entity';
 import { CardTypeEntity } from '../types/type.entity';
 import { RarityEntity } from '../rarity/rarity.entity';
+import { Media } from '../media/media.entity';
 
 @ObjectType()
 @Entity()
@@ -22,9 +23,17 @@ export class Card extends BaseEntity {
   @Property({ type: 'text', nullable: true })
   description?: string;
 
-  @Field({ description: 'CDN link' })
-  @Property({ type: 'string' })
-  imageUrl!: string;
+  /** Legacy external link, used only while the card has no media (GraphQL `imageUrl` is resolved) */
+  @Property({ type: 'string', nullable: true })
+  imageUrl?: string | null;
+
+  @ManyToOne({
+    entity: () => Media,
+    fieldName: 'media_id',
+    nullable: true,
+    deleteRule: 'set null',
+  })
+  media?: Media | null;
 
   @Field(() => RarityEntity)
   @ManyToOne({ entity: () => RarityEntity, fieldName: 'rarity_id' })
