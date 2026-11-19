@@ -1,33 +1,41 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppResolver } from './app.resolver';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { ConfigModule } from '@nestjs/config';
-import { Battle } from './battle.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import config from './mikro.config';
+import { GeneralModule } from './modules/general.module';
+import { AuthModule } from './modules/auth/auth.module';
+import type { ExpressContextFunctionArgument } from '@as-integrations/express5';
 
 @Module({
   imports: [
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
+      imports: [ConfigModule, GeneralModule],
+      inject: [ConfigService],
       driver: ApolloDriver,
-      autoSchemaFile: true, // in-memory code-first schema
+      useFactory: async (configService: ConfigService) => ({
+        autoSchemaFile: true, // in-memory code-first schema
+        sortSchema: true,
+        playground: configService.get('NODE_ENV') === 'development', // enable playground in non-production environments
+        // Apollo disables introspection when NODE_ENV=production; GRAPHQL_INTROSPECTION=true re-enables it (staging + Apollo Sandbox)
+        introspection:
+          configService.get('NODE_ENV') !== 'production' ||
+          configService.get('GRAPHQL_INTROSPECTION') === 'true',
+        include: [GeneralModule],
+        context: ({ req, res }: ExpressContextFunctionArgument) => ({
+          req,
+          res,
+        }),
+      }),
     }),
     ConfigModule.forRoot({ isGlobal: true }), // loads .env into process.env synchronously
-    MikroOrmModule.forRoot({
-      driver: PostgreSqlDriver,
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      dbName: process.env.DB_NAME,
-      autoLoadEntities: true,
-    }),
-    MikroOrmModule.forFeature([Battle]), // autoLoadEntities picks entities up from forFeature
+    MikroOrmModule.forRoot(config),
+    GeneralModule,
+    AuthModule,
   ],
-  controllers: [AppController],
   providers: [AppService, AppResolver],
 })
 export class AppModule {}
