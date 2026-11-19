@@ -78,7 +78,7 @@ describe('CardsService', () => {
 
       expect(em.findAndCount).toHaveBeenCalledWith(
         Card,
-        { rarityId: 2 },
+        { rarity: 2 },
         {
           populate,
           orderBy: [{ title: 'asc' }, { id: 'asc' }],
@@ -115,7 +115,7 @@ describe('CardsService', () => {
         Card,
         {},
         expect.objectContaining({
-          orderBy: [{ rarityId: 'desc' }, { title: 'asc' }, { id: 'asc' }],
+          orderBy: [{ rarity: 'desc' }, { title: 'asc' }, { id: 'asc' }],
         }),
       );
     });

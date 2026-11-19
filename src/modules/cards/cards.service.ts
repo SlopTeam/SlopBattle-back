@@ -18,7 +18,7 @@ const orderBy: Record<CardSort, FindOptions<Card>['orderBy']> = {
   [CardSort.TITLE_ASC]: [{ title: 'asc' }, { id: 'asc' }],
   [CardSort.TITLE_DESC]: [{ title: 'desc' }, { id: 'asc' }],
   [CardSort.RARITY_DESC]: [
-    { rarityId: 'desc' },
+    { rarity: 'desc' },
     { title: 'asc' },
     { id: 'asc' },
   ],
