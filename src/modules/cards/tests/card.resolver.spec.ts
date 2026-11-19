@@ -1,11 +1,13 @@
 import { jest } from '@jest/globals';
 import { CardResolver } from '../card.resolver';
 import type { CardsService } from '../cards.service';
+import { CardSort } from '../models/cards-page.model';
 
 describe('CardResolver', () => {
   let resolver: CardResolver;
   const service = {
     findAll: jest.fn<(...args: any[]) => any>(),
+    findPage: jest.fn<(...args: any[]) => any>(),
     findOne: jest.fn<(...args: any[]) => any>(),
     create: jest.fn<(...args: any[]) => any>(),
     update: jest.fn<(...args: any[]) => any>(),
@@ -28,6 +30,21 @@ describe('CardResolver', () => {
     service.findAll.mockResolvedValue([]);
     await expect(resolver.cards(filter)).resolves.toEqual([]);
     expect(service.findAll).toHaveBeenCalledWith(filter);
+  });
+
+  it('cardsPage forwards filter, page, size and sort to findPage', async () => {
+    const filter = { search: 'slop' };
+    const page = { items: [], total: 0, page: 2, pageSize: 10, pageCount: 1 };
+    service.findPage.mockResolvedValue(page);
+    await expect(
+      resolver.cardsPage(filter, 2, 10, CardSort.NEWEST),
+    ).resolves.toBe(page);
+    expect(service.findPage).toHaveBeenCalledWith(
+      filter,
+      2,
+      10,
+      CardSort.NEWEST,
+    );
   });
 
   it('card delegates to findOne', async () => {

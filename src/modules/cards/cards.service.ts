@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
-import type { FilterQuery } from '@mikro-orm/core';
+import type { FilterQuery, FindOptions } from '@mikro-orm/core';
 import { Card } from './card.entity';
+import { CardSort, CardsPage } from './models/cards-page.model';
 import {
   CardsFilterInput,
   CreateCardInput,
@@ -10,13 +11,67 @@ import {
 
 const populate = ['categories', 'types', 'rarity'] as const;
 
+export const MAX_PAGE_SIZE = 100;
+
+// id last: rows with the same sort value keep a stable order across pages
+const orderBy: Record<CardSort, FindOptions<Card>['orderBy']> = {
+  [CardSort.TITLE_ASC]: [{ title: 'asc' }, { id: 'asc' }],
+  [CardSort.TITLE_DESC]: [{ title: 'desc' }, { id: 'asc' }],
+  [CardSort.RARITY_DESC]: [
+    { rarityId: 'desc' },
+    { title: 'asc' },
+    { id: 'asc' },
+  ],
+  [CardSort.NEWEST]: [{ createdAt: 'desc' }, { id: 'asc' }],
+};
+
+// LIKE wildcards typed by the user are matched literally
+function escapeLike(text: string) {
+  return text.replace(/[\\%_]/g, '\\$&');
+}
+
 @Injectable()
 export class CardsService {
   constructor(private readonly em: EntityManager) {}
 
-  // values inside one filter are OR-ed, different filters are AND-ed
   findAll(filter?: CardsFilterInput) {
+    return this.em.find(Card, this.toWhere(filter), { populate });
+  }
+
+  async findPage(
+    filter: CardsFilterInput | undefined,
+    page: number,
+    pageSize: number,
+    sort: CardSort,
+  ): Promise<CardsPage> {
+    const size = Math.min(Math.max(pageSize, 1), MAX_PAGE_SIZE);
+    const current = Math.max(page, 1);
+    const [items, total] = await this.em.findAndCount(
+      Card,
+      this.toWhere(filter),
+      {
+        populate,
+        orderBy: orderBy[sort],
+        limit: size,
+        offset: (current - 1) * size,
+      },
+    );
+    return {
+      items,
+      total,
+      page: current,
+      pageSize: size,
+      pageCount: Math.max(1, Math.ceil(total / size)),
+    };
+  }
+
+  // values inside one filter are OR-ed, different filters are AND-ed
+  private toWhere(filter?: CardsFilterInput): FilterQuery<Card> {
     const where: FilterQuery<Card> = {};
+    const search = filter?.search?.trim();
+    if (search) {
+      where.title = { $ilike: `%${escapeLike(search)}%` };
+    }
     if (filter?.rarityId != null) {
       where.rarity = filter.rarityId;
     }
@@ -26,7 +81,7 @@ export class CardsService {
     if (filter?.typeIds?.length) {
       where.types = { id: { $in: filter.typeIds } };
     }
-    return this.em.find(Card, where, { populate });
+    return where;
   }
 
   findOne(id: number) {

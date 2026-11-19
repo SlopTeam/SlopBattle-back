@@ -1,12 +1,14 @@
 import { jest } from '@jest/globals';
 import { CardsService } from '../cards.service';
 import { Card } from '../card.entity';
+import { CardSort } from '../models/cards-page.model';
 
 describe('CardsService', () => {
   let service: CardsService;
   const populate = ['categories', 'types', 'rarity'];
   const em = {
     find: jest.fn<(...args: any[]) => any>(),
+    findAndCount: jest.fn<(...args: any[]) => any>(),
     findOneOrFail: jest.fn<(...args: any[]) => any>(),
     create: jest.fn<(...args: any[]) => any>(),
     assign: jest.fn<(...args: any[]) => any>(),
@@ -46,6 +48,79 @@ describe('CardsService', () => {
     );
   });
 
+  it('findAll searches the title, case-insensitively and literally', async () => {
+    em.find.mockResolvedValue([]);
+    await service.findAll({ search: '  50%_off ' });
+    expect(em.find).toHaveBeenCalledWith(
+      Card,
+      { title: { $ilike: '%50\\%\\_off%' } },
+      { populate },
+    );
+  });
+
+  it('findAll ignores a blank search', async () => {
+    em.find.mockResolvedValue([]);
+    await service.findAll({ search: '   ' });
+    expect(em.find).toHaveBeenCalledWith(Card, {}, { populate });
+  });
+
+  describe('findPage', () => {
+    it('returns one page with the total', async () => {
+      const items = [{ id: 3 }];
+      em.findAndCount.mockResolvedValue([items, 45]);
+
+      const result = await service.findPage(
+        { rarityId: 2 },
+        2,
+        20,
+        CardSort.TITLE_ASC,
+      );
+
+      expect(em.findAndCount).toHaveBeenCalledWith(
+        Card,
+        { rarityId: 2 },
+        {
+          populate,
+          orderBy: [{ title: 'asc' }, { id: 'asc' }],
+          limit: 20,
+          offset: 20,
+        },
+      );
+      expect(result).toEqual({
+        items,
+        total: 45,
+        page: 2,
+        pageSize: 20,
+        pageCount: 3,
+      });
+    });
+
+    it('clamps page and pageSize', async () => {
+      em.findAndCount.mockResolvedValue([[], 0]);
+
+      const result = await service.findPage(undefined, 0, 500, CardSort.NEWEST);
+
+      expect(em.findAndCount).toHaveBeenCalledWith(
+        Card,
+        {},
+        expect.objectContaining({ limit: 100, offset: 0 }),
+      );
+      expect(result).toMatchObject({ page: 1, pageSize: 100, pageCount: 1 });
+    });
+
+    it('sorts by rarity, rarest first, then by title', async () => {
+      em.findAndCount.mockResolvedValue([[], 0]);
+      await service.findPage(undefined, 1, 10, CardSort.RARITY_DESC);
+      expect(em.findAndCount).toHaveBeenCalledWith(
+        Card,
+        {},
+        expect.objectContaining({
+          orderBy: [{ rarityId: 'desc' }, { title: 'asc' }, { id: 'asc' }],
+        }),
+      );
+    });
+  });
+
   it('findOne populates categories and types', async () => {
     em.findOneOrFail.mockResolvedValue({ id: 1 });
     await expect(service.findOne(1)).resolves.toEqual({ id: 1 });
@@ -69,7 +144,9 @@ describe('CardsService', () => {
         types: [2],
       });
       expect(em.flush).toHaveBeenCalledTimes(1);
-      expect(em.populate).toHaveBeenCalledWith(card, populate, { refresh: true });
+      expect(em.populate).toHaveBeenCalledWith(card, populate, {
+        refresh: true,
+      });
       expect(result).toBe(card);
     });
 
@@ -112,7 +189,9 @@ describe('CardsService', () => {
         types: [4],
       });
       expect(em.flush).toHaveBeenCalledTimes(1);
-      expect(em.populate).toHaveBeenCalledWith(card, populate, { refresh: true });
+      expect(em.populate).toHaveBeenCalledWith(card, populate, {
+        refresh: true,
+      });
       expect(result).toBe(card);
     });
 
