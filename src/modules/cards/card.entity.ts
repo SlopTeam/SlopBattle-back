@@ -1,9 +1,15 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { Entity, ManyToMany, Property } from '@mikro-orm/decorators/legacy';
+import { Field, ObjectType } from '@nestjs/graphql';
+import {
+  Entity,
+  ManyToMany,
+  ManyToOne,
+  Property,
+} from '@mikro-orm/decorators/legacy';
 import { Collection } from '@mikro-orm/core';
 import { BaseEntity } from '../base.entity';
 import { CategoryEntity } from '../categories/category.entity';
 import { CardTypeEntity } from '../types/type.entity';
+import { RarityEntity } from '../rarity/rarity.entity';
 
 @ObjectType()
 @Entity()
@@ -20,10 +26,9 @@ export class Card extends BaseEntity {
   @Property({ type: 'string' })
   imageUrl!: string;
 
-  // ponytail: plain FK column until the Rarity entity exists, then turn it into a ManyToOne.
-  @Field(() => Int)
-  @Property({ type: 'number' })
-  rarityId!: number;
+  @Field(() => RarityEntity)
+  @ManyToOne({ entity: () => RarityEntity, fieldName: 'rarity_id' })
+  rarity!: RarityEntity;
 
   @Field(() => [CategoryEntity])
   @ManyToMany({

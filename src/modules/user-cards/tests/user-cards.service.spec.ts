@@ -45,7 +45,7 @@ describe('UserCardsService', () => {
       expect(repo.find).toHaveBeenCalledWith({
         user: 1,
         card: {
-          rarityId: 2,
+          rarity: 2,
           categories: { id: { $in: [3, 4] } },
           types: { id: { $in: [5] } },
         },
