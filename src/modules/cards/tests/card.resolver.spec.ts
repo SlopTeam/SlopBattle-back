@@ -72,4 +72,23 @@ describe('CardResolver', () => {
     await expect(resolver.removeCard(1)).resolves.toBe(true);
     expect(service.remove).toHaveBeenCalledWith(1);
   });
+
+  describe('imageUrl', () => {
+    afterEach(() => {
+      delete process.env.PUBLIC_URL;
+    });
+
+    it('returns the URL of the uploaded media', async () => {
+      process.env.PUBLIC_URL = 'https://slop.example';
+      const card = { imageUrl: null, media: { key: 'a.webp' } } as any;
+      await expect(resolver.imageUrl(card)).resolves.toBe(
+        'https://slop.example/media/a.webp',
+      );
+    });
+
+    it('falls back to the legacy link without media', async () => {
+      const card = { imageUrl: 'https://old', media: null } as any;
+      await expect(resolver.imageUrl(card)).resolves.toBe('https://old');
+    });
+  });
 });

@@ -1,4 +1,14 @@
-import { Args, ID, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { wrap } from '@mikro-orm/core';
+import {
+  Args,
+  ID,
+  Int,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import { Card } from './card.entity';
 import {
   CardsFilterInput,
@@ -8,6 +18,7 @@ import {
 import { CardsService } from './cards.service';
 import { CardSort, CardsPage } from './models/cards-page.model';
 import { Admin, PlayerOrAdmin } from '../auth/decorators/admin.decorator';
+import { mediaUrl } from '../media/media.storage';
 
 @Resolver(() => Card)
 export class CardResolver {
@@ -62,5 +73,15 @@ export class CardResolver {
   @Mutation(() => Boolean)
   removeCard(@Args('id', { type: () => ID }) id: number) {
     return this.cardsService.remove(id);
+  }
+
+  @ResolveField(() => String, {
+    description: 'URL of the uploaded image, or the legacy external link',
+  })
+  async imageUrl(@Parent() card: Card) {
+    if (!card.media) return card.imageUrl ?? '';
+    // cards reached through another entity (a booster) may hold an unloaded reference
+    const media = card.media.key ? card.media : await wrap(card.media).init();
+    return media ? mediaUrl(media.key) : (card.imageUrl ?? '');
   }
 }

@@ -12,9 +12,21 @@ export class CreateCardInput {
   @IsOptional()
   description?: string;
 
-  @Field()
+  @Field(() => Int, {
+    nullable: true,
+    description: 'Image uploaded with uploadMedia; replaces imageUrl',
+  })
+  @IsOptional()
+  @IsInt()
+  mediaId?: number;
+
+  @Field({
+    nullable: true,
+    description: 'Legacy external image link, used when mediaId is not given',
+  })
+  @IsOptional()
   @IsString()
-  imageUrl!: string;
+  imageUrl?: string;
 
   @Field(() => Int)
   @IsOptional()
